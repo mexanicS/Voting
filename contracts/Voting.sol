@@ -16,6 +16,11 @@ contract Voting {
   }
 
   mapping(uint => Candidate) public candidates;
+  mapping(address => bool) private voters;
+
+  event votedEvent (
+    uint indexed candidateId
+  );
 
   modifier requireOwner() {
     require(owner == msg.sender, "No access");
@@ -25,5 +30,14 @@ contract Voting {
   function addCandidate(string memory new_name) public requireOwner {
     Count ++;
     candidates[Count] = Candidate(Count, new_name, 0);
+  }
+
+  function vote (uint candidateId) public payable {
+    require(candidateId > 0 && candidateId <= Count);
+    require(!voters[msg.sender]);
+    require(msg.value >= .01 ether);
+    voters[msg.sender] = true;
+    candidates[candidateId].totalVotes++;
+    emit votedEvent(candidateId);
   }
 }
