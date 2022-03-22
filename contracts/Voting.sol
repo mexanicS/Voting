@@ -8,6 +8,7 @@ contract Voting {
 
   address public owner;
   uint private Count;
+  uint public votingTime = 72;
 
   struct Candidate {
     uint id;
@@ -27,6 +28,10 @@ contract Voting {
     _;
   }
 
+    function createVote() public requireOwner {
+
+  }
+
   function addCandidate(string memory new_name) public requireOwner {
     Count ++;
     candidates[Count] = Candidate(Count, new_name, 0);
@@ -40,4 +45,12 @@ contract Voting {
     candidates[candidateId].totalVotes++;
     emit votedEvent(candidateId);
   }
-}
+
+  function withdrawCommission () public {
+
+  }
+
+  function endOfVoting () public requireOwner {
+
+  }
+ }
