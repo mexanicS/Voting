@@ -8,7 +8,12 @@ contract Voting {
 
   address public owner;
   uint private Count;
-  uint public votingTime = 72;
+  uint _end;
+  uint _start;
+  uint totalTime = 86400;
+
+
+  //uint public votingTime = 72;
 
   struct Candidate {
     uint id;
@@ -28,8 +33,22 @@ contract Voting {
     _;
   }
 
-    function createVote() public requireOwner {
+  modifier timerOver() {
+    require(block.timestamp<=_end, "Voting time is up.");
+    _;
+  }
 
+  function time ()  public requireOwner{
+    _start = block.timestamp;
+    _end = totalTime+_start;
+  }
+
+  function getTimerLeft() public timerOver view returns(uint) {
+    return _end - block.timestamp;
+  }
+
+  function startVote() public requireOwner {
+    time();
   }
 
   function addCandidate(string memory new_name) public requireOwner {
