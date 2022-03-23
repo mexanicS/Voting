@@ -65,6 +65,10 @@ contract Voting {
     emit votedEvent(candidateId);
   }
 
+  function showVotes(uint candidateId) public view returns  (uint) {
+    return candidates[candidateId].totalVotes;
+  }
+
   function withdrawCommission () public {
 
   }
