@@ -11,6 +11,7 @@ contract Voting {
   uint _end;
   uint _start;
   uint totalTime = 86400;
+  bool timesUp = false;
 
 
   //uint public votingTime = 72;
@@ -41,6 +42,9 @@ contract Voting {
   function time ()  public requireOwner{
     _start = block.timestamp;
     _end = totalTime+_start;
+    if (block.timestamp<=_end)
+    timesUp = true;
+    
   }
 
   function getTimerLeft() public timerOver view returns(uint) {
@@ -48,6 +52,7 @@ contract Voting {
   }
 
   function startVote() public requireOwner {
+    timesUp = false;
     time();
   }
 
@@ -69,11 +74,18 @@ contract Voting {
     return candidates[candidateId].totalVotes;
   }
 
+  function searchMax() public {
+
+  }
+
   function withdrawCommission () public {
 
   }
-
-  function endOfVoting () public requireOwner {
-
-  }
+  
+  //TO DO: Найти победителя
+  /*function endOfVoting (address payable _to) public  {
+    if(timesUp = true){
+      _to.transfer(address));
+    }
+  }*/
  }
