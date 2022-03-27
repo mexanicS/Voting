@@ -2,90 +2,69 @@
 pragma solidity >=0.4.22 <0.9.0;
 
 contract Voting {
+  address owner;
+
+  uint256 private _currentElectionId;
+  uint256 public totalTime = 3 days;
+
   constructor()  {
     owner = msg.sender;
   }
 
-  address public owner;
-  uint private Count;
-  uint _end;
-  uint _start;
-  uint totalTime = 86400;
-  bool timesUp = false;
-
-
-  //uint public votingTime = 72;
-
-  struct Candidate {
-    uint id;
-    string name;
-    uint totalVotes;
-  }
-
-  mapping(uint => Candidate) public candidates;
-  mapping(address => bool) private voters;
-
-  event votedEvent (
-    uint indexed candidateId
-  );
+  mapping(uint256 => mapping(address => Vote)) private _votes;
+  mapping(uint256 => Election) public _election;
 
   modifier requireOwner() {
     require(owner == msg.sender, "No access");
     _;
   }
 
-  modifier timerOver() {
-    require(block.timestamp<=_end, "Voting time is up.");
-    _;
+  enum ElectionStatus {
+    SUCCESSFUL,
+    UNSUCCESSFUL,
+    ACTIVE
   }
 
-  function time ()  public requireOwner{
-    _start = block.timestamp;
-    _end = totalTime+_start;
-    if (block.timestamp<=_end)
-    timesUp = true;
+  event NewElection(uint256 indexed index);
+
+  struct Vote {
+    uint256 voteNum;
+    bool isVoted;
+  }
+
+  struct Election {
+    string description;
+    uint256 endTimeOfElecting;
+    ElectionStatus status;
+    uint256 numberOfVotes;
+  }
+
+  function createElection(string memory description) public requireOwner returns (uint256){
+    uint256 electionId =_currentElectionId++;
+    _election[electionId] = Election({
+      description: description,
+      endTimeOfElecting: block.timestamp + totalTime,
+      status: ElectionStatus.ACTIVE,
+      numberOfVotes: 0
+    });
+
+    emit NewElection(electionId);
+    return electionId;
+  }
+
+  function vote() public payable {
+
+  }
+
+  //Инфо про одно из голосований
+  function informationOf(uint8 electionId) external view returns (Election memory election){
+    return _election[electionId];
+  }
+
+  //
+  function finishElection(uint256 electionId) external {
+
+  }
+
     
-  }
-
-  function getTimerLeft() public timerOver view returns(uint) {
-    return _end - block.timestamp;
-  }
-
-  function startVote() public requireOwner {
-    timesUp = false;
-    time();
-  }
-
-  function addCandidate(string memory new_name) public requireOwner {
-    Count ++;
-    candidates[Count] = Candidate(Count, new_name, 0);
-  }
-
-  function vote (uint candidateId) public payable {
-    require(candidateId > 0 && candidateId <= Count);
-    require(!voters[msg.sender]);
-    require(msg.value >= .01 ether);
-    voters[msg.sender] = true;
-    candidates[candidateId].totalVotes++;
-    emit votedEvent(candidateId);
-  }
-
-  function showVotes(uint candidateId) public view returns  (uint) {
-    return candidates[candidateId].totalVotes;
-  }
-
-  function searchMax() public {
-
-  }
-
-  function withdrawCommission () public {
-
-  }
-  
-  //TO DO: Найти победителя
-  /*function endOfVoting (address payable _to) public  {
-    if(timesUp = true){
-      _to.transfer(address));
-    }
-  }*/
- }
+}
