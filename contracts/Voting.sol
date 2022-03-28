@@ -55,8 +55,6 @@ contract Voting {
     uint256 comission;
   }
 
-  
-
   function createElection(string memory description) public requireOwner returns (uint256){
     uint256 electionId =_currentElectionId++;
 
@@ -107,7 +105,7 @@ contract Voting {
   }
 
   //Показать список кандидатов
-  function infCandidate(uint8 electionId) external view returns (string[] memory){
+  function listCandidate(uint8 electionId) external view returns (string[] memory){
     string[] memory curentAdrCandidate;
     for (uint256 i = 0; i < _election[electionId].numberOfCandidate; i++) {
     curentAdrCandidate[i] = _candidate[electionId][i].name;
@@ -120,14 +118,19 @@ contract Voting {
     endTime = _election[elactionID].endTimeOfElecting - block.timestamp;
     return endTime;
   }
+  
+  //Инфо про кандитатов
+  function infElaction(uint8 electionId, uint candidate) external view returns (Candidate memory candidates){
+    return _candidate[electionId][candidate];
+  }
 
-  //Инфо про любого
-  function infOf(uint8 electionId,address candidate) external view returns (Vote memory votes){
+  //Инфо про любого кто голосовал
+  function infVoter(uint8 electionId,address candidate) external view returns (Vote memory votes){
     return _votes[electionId][candidate];
   }
 
   //Инфо про одно из голосований
-  function informationOf(uint8 electionId) external view returns (Election memory election){
+  function infElaction(uint8 electionId) external view returns (Election memory election){
     return _election[electionId];
   }
 
