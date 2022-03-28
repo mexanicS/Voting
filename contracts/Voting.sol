@@ -6,8 +6,8 @@ contract Voting {
 
   uint256 private _currentElectionId;
   uint256 public totalTime = 3 days;
-
-
+  uint256 public endTime;
+  
   constructor()  {
     owner = msg.sender;
   }
@@ -33,7 +33,7 @@ contract Voting {
   event NewElection(uint256 indexed index);
   event Voted(uint indexed id, address indexed voter);
   event Withdraw(address indexed account, uint256 amount);
-  event VotingFinished(uint256 indexed id,ElectionStatus electionStatus,bool callDataStatus);
+  event ElectionFinished(uint256 indexed id,ElectionStatus electionStatus);
 
   struct Candidate {
     string name;
@@ -50,7 +50,9 @@ contract Voting {
     uint256 endTimeOfElecting;
     ElectionStatus status;
     uint256 numberOfVotes;
-    uint numberOfCandidate;
+    uint256 numberOfCandidate;
+    uint256 deposit;
+    uint256 comission;
   }
 
   
@@ -63,7 +65,9 @@ contract Voting {
       endTimeOfElecting: block.timestamp + totalTime,
       status: ElectionStatus.ACTIVE,
       numberOfVotes: 0,
-      numberOfCandidate: 0
+      numberOfCandidate: 0,
+      deposit: 0,
+      comission: 0
     });
     emit NewElection(electionId);
     return electionId;
@@ -71,7 +75,7 @@ contract Voting {
 
   function addCandidate(uint electionId,string memory _name, address _adrCandidate) public {
     require(_election[electionId].status==ElectionStatus.ACTIVE,"Voting is not ACTIVE");
-    //require(_election[electionId].endTimeOfElecting >= block.timestamp,"Start voting first.");
+    require(_election[electionId].endTimeOfElecting >= block.timestamp,"Start voting first.");
     
     for (uint256 i = 0; i < _election[electionId].numberOfCandidate; i++) {
       //require(condition);
@@ -87,17 +91,17 @@ contract Voting {
     require(_currentElectionId >= electionId, "Voting does not exist");
     Election storage election = _election[electionId];
     require(election.endTimeOfElecting >= block.timestamp,"The voting is over");
-    require(!_votes[electionId][msg.sender].isVoted,"have you already voted");
+    require(!_votes[electionId][msg.sender].isVoted,"Have you already voted");
     require(msg.value >= .01 ether);
-    
+
+    _election[electionId].deposit += msg.value;
+
     _votes[electionId][msg.sender].isVoted = true;
     _votes[electionId][msg.sender].candidateAddress = _candidate[electionId][candidate].adrCandidate;
 
     _election[electionId].numberOfVotes++;
 
     _candidate[electionId][candidate].numberVotes++;
-
-    //_userVotes[msg.sender].push(electionId);
 
     emit Voted(electionId, msg.sender);
   }
@@ -111,6 +115,12 @@ contract Voting {
     return curentAdrCandidate;
   }
 
+  //До конца голосования
+  function timeLeft (uint elactionID) public returns(uint256){
+    endTime = _election[elactionID].endTimeOfElecting - block.timestamp;
+    return endTime;
+  }
+
   //Инфо про любого
   function infOf(uint8 electionId,address candidate) external view returns (Vote memory votes){
     return _votes[electionId][candidate];
@@ -121,13 +131,18 @@ contract Voting {
     return _election[electionId];
   }
 
+  function withdrawComission(uint electionId, address payable _to) public requireOwner{
+    require(_election[electionId].status==ElectionStatus.COMPLETED,"voting is still ACTIVE");
+    _to.transfer(_election[electionId].comission);
+  }
+
   //Завершить голосование
   function finishElection(uint256 electionId) public {
     require(_election[electionId].status == ElectionStatus.ACTIVE,"Proposal is already completed.");
     require(_election[electionId].endTimeOfElecting <= block.timestamp,"Voting is active.");
     _election[electionId].status = ElectionStatus.COMPLETED;
 
-    address winCandidate;
+    address payable winCandidate;
     uint256 maxVotes;
     for (uint256 i = 0; i < _election[electionId].numberOfCandidate; i++) {
       if(_candidate[electionId][i].numberVotes > maxVotes){
@@ -135,8 +150,14 @@ contract Voting {
         winCandidate == _candidate[electionId][i].adrCandidate;
       }
     }
-    //winCandidate.transfer(address(this).balance);
-  }
 
-    
+    _election[electionId].comission = _election[electionId].deposit / 10;
+    _election[electionId].deposit -= _election[electionId].comission;
+
+    winCandidate.transfer(_election[electionId].deposit);
+    _election[electionId].deposit = 0;
+
+    _election[electionId].status = ElectionStatus.COMPLETED;
+    emit ElectionFinished(electionId,_election[electionId].status);
+  } 
 }
