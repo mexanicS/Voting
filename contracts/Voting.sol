@@ -4,6 +4,7 @@ pragma solidity >=0.4.22 <0.9.0;
 contract Voting {
   address owner;
   address payable winCandidate;
+  string[] public curentAdrCandidate;
 
   uint256 private _currentElectionId;
   uint256 public totalTime = 3 days;
@@ -38,13 +39,13 @@ contract Voting {
 
   struct Candidate {
     string name;
-    address candidateAddress;
+    address payable candidateAddress;
     uint numberVotes;
   }
   struct Vote {
     bool isVoted;
     address candidateAddress;
-    address voteAddress;
+    string nameCandidate;
   }
   struct Election {
     string description;
@@ -72,7 +73,7 @@ contract Voting {
     return electionId;
   }
 
-  function addCandidate(uint electionId,string memory _name, address _adrCandidate) public {
+  function addCandidate(uint electionId,string memory _name, address payable _adrCandidate) public {
     require(_election[electionId].status==ElectionStatus.ACTIVE,"Voting is not ACTIVE");
     require(_election[electionId].endTimeOfElecting >= block.timestamp,"Start voting first.");
     
@@ -98,7 +99,7 @@ contract Voting {
 
     _votes[electionId][msg.sender].isVoted = true;
     _votes[electionId][msg.sender].candidateAddress = _candidate[electionId][candidate].candidateAddress;
-    _votes[electionId][msg.sender].voteAddress = msg.sender;
+    _votes[electionId][msg.sender].nameCandidate = _candidate[electionId][candidate].name;
 
     _candidate[electionId][candidate].numberVotes++;
 
@@ -106,10 +107,9 @@ contract Voting {
   }
 
   //Показать список кандидатов
-  function listCandidate(uint8 electionId) external view returns (string[] memory){
-    string[] memory curentAdrCandidate;
+  function listCandidate(uint256 electionId) external returns (string[] memory){
     for (uint256 i = 0; i < _election[electionId].numberOfCandidate; i++) {
-    curentAdrCandidate[i] = _candidate[electionId][i].name;
+    curentAdrCandidate.push(_candidate[electionId][i].name);
     }
     return curentAdrCandidate;
   }
@@ -126,8 +126,8 @@ contract Voting {
   }
 
   //Инфо про любого кто голосовал
-  function infVoter(uint8 electionId,address candidate) external view returns (Vote memory votes){
-    return _votes[electionId][candidate];
+  function infVoter(uint8 electionId,address voter) external view returns (Vote memory votes){
+    return _votes[electionId][voter];
   }
 
   //Инфо про одно из голосований
@@ -148,12 +148,10 @@ contract Voting {
     require(_election[electionId].endTimeOfElecting <= block.timestamp,"Voting is active.");
     _election[electionId].status = ElectionStatus.COMPLETED;
 
-    
-    
     for (uint256 i = 0; i < _election[electionId].numberOfCandidate; i++) {
       if(_candidate[electionId][i].numberVotes > maxVotes){
-        maxVotes == _candidate[electionId][i].numberVotes;
-        winCandidate == _candidate[electionId][i].candidateAddress;
+        maxVotes = _candidate[electionId][i].numberVotes;
+        winCandidate = _candidate[electionId][i].candidateAddress;
       }
     }
 
