@@ -4,7 +4,7 @@ pragma solidity >=0.4.22 <0.9.0;
 contract Voting {
   address owner;
   address payable winCandidate;
-  string[] public curentAdrCandidate;
+  //string[] public curentAdrCandidate;
 
   uint256 private _currentElectionId;
   uint256 public totalTime = 3 days;
@@ -16,10 +16,7 @@ contract Voting {
   }
 
   mapping(uint256 => mapping(address => Vote)) private _votes;
-  //TO DO: Переделать в приват
   mapping(uint256 => mapping(uint256 => Candidate)) public _candidate;
-
-  //TO DO: Переделать в приват
   mapping(uint256 => Election) public _election;
 
   modifier requireOwner() {
@@ -53,34 +50,37 @@ contract Voting {
     ElectionStatus status;
     uint256 numberOfVotes;
     uint256 numberOfCandidate;
+    string[] listCandidate;
     uint256 deposit;
     uint256 comission;
   }
 
   function createElection(string memory description) public requireOwner returns (uint256){
     uint256 electionId =_currentElectionId++;
+    Election storage election = _election[electionId];
+    election.description = description;
+    election.endTimeOfElecting = block.timestamp + totalTime;
+    election.status = ElectionStatus.ACTIVE;
 
-    _election[electionId] = Election({
+    /*_election[electionId] = Election({
       description: description,
       endTimeOfElecting: block.timestamp + totalTime,
       status: ElectionStatus.ACTIVE,
       numberOfVotes: 0,
       numberOfCandidate: 0,
+      listCandidate:,
       deposit: 0,
       comission: 0
-    });
+    });*/
     emit NewElection(electionId);
     return electionId;
   }
 
+  //TO DO: Невозможность добавить один и тот же адрес
   function addCandidate(uint electionId,string memory _name, address payable _adrCandidate) public {
     require(_election[electionId].status==ElectionStatus.ACTIVE,"Voting is not ACTIVE");
     require(_election[electionId].endTimeOfElecting >= block.timestamp,"Start voting first.");
     
-    /*for (uint256 i = 0; i < _election[electionId].numberOfCandidate; i++) {
-      //require(condition);
-    }*/
-
     _candidate[electionId][_election[electionId].numberOfCandidate].name = _name;
     _candidate[electionId][_election[electionId].numberOfCandidate].candidateAddress = _adrCandidate;
 
@@ -109,9 +109,9 @@ contract Voting {
   //Показать список кандидатов
   function listCandidate(uint256 electionId) external returns (string[] memory){
     for (uint256 i = 0; i < _election[electionId].numberOfCandidate; i++) {
-    curentAdrCandidate.push(_candidate[electionId][i].name);
+    _election[electionId].listCandidate.push(_candidate[electionId][i].name);
     }
-    return curentAdrCandidate;
+    return _election[electionId].listCandidate;
   }
 
   //До конца голосования
@@ -142,7 +142,7 @@ contract Voting {
     _election[electionId].comission = 0;
   }
 
-  //Завершить голосование
+  //Завершить голосование и отправить комиссию кому угодно
   function finishElection(uint256 electionId) public {
     require(_election[electionId].status == ElectionStatus.ACTIVE,"Voting is still underway.");
     require(_election[electionId].endTimeOfElecting <= block.timestamp,"Voting is active.");
