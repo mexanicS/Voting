@@ -3,22 +3,23 @@ pragma solidity >=0.4.22 <0.9.0;
 
 contract Voting {
   address owner;
+  address payable winCandidate;
 
   uint256 private _currentElectionId;
   uint256 public totalTime = 3 days;
   uint256 public endTime;
+  uint256 maxVotes;
   
   constructor()  {
     owner = msg.sender;
   }
 
   mapping(uint256 => mapping(address => Vote)) private _votes;
+  //TO DO: Переделать в приват
   mapping(uint256 => mapping(uint256 => Candidate)) public _candidate;
 
-
+  //TO DO: Переделать в приват
   mapping(uint256 => Election) public _election;
-  mapping(address => uint256[]) private _userVotes;
-  mapping(uint256 => address) public _users;
 
   modifier requireOwner() {
     require(owner == msg.sender, "No access");
@@ -37,13 +38,13 @@ contract Voting {
 
   struct Candidate {
     string name;
-    address adrCandidate;
+    address candidateAddress;
     uint numberVotes;
   }
   struct Vote {
     bool isVoted;
     address candidateAddress;
-    address adrFrom;
+    address voteAddress;
   }
   struct Election {
     string description;
@@ -75,12 +76,12 @@ contract Voting {
     require(_election[electionId].status==ElectionStatus.ACTIVE,"Voting is not ACTIVE");
     require(_election[electionId].endTimeOfElecting >= block.timestamp,"Start voting first.");
     
-    for (uint256 i = 0; i < _election[electionId].numberOfCandidate; i++) {
+    /*for (uint256 i = 0; i < _election[electionId].numberOfCandidate; i++) {
       //require(condition);
-    }
+    }*/
 
     _candidate[electionId][_election[electionId].numberOfCandidate].name = _name;
-    _candidate[electionId][_election[electionId].numberOfCandidate].adrCandidate = _adrCandidate;
+    _candidate[electionId][_election[electionId].numberOfCandidate].candidateAddress = _adrCandidate;
 
     _election[electionId].numberOfCandidate++;
   }
@@ -93,11 +94,11 @@ contract Voting {
     require(msg.value >= .01 ether);
 
     _election[electionId].deposit += msg.value;
+    _election[electionId].numberOfVotes++;
 
     _votes[electionId][msg.sender].isVoted = true;
-    _votes[electionId][msg.sender].candidateAddress = _candidate[electionId][candidate].adrCandidate;
-
-    _election[electionId].numberOfVotes++;
+    _votes[electionId][msg.sender].candidateAddress = _candidate[electionId][candidate].candidateAddress;
+    _votes[electionId][msg.sender].voteAddress = msg.sender;
 
     _candidate[electionId][candidate].numberVotes++;
 
@@ -120,7 +121,7 @@ contract Voting {
   }
   
   //Инфо про кандитатов
-  function infElaction(uint8 electionId, uint candidate) external view returns (Candidate memory candidates){
+  function infCandidate(uint8 electionId, uint candidate) external view returns (Candidate memory candidates){
     return _candidate[electionId][candidate];
   }
 
@@ -134,23 +135,25 @@ contract Voting {
     return _election[electionId];
   }
 
+  //Вывести комиссию
   function withdrawComission(uint electionId, address payable _to) public requireOwner{
-    require(_election[electionId].status==ElectionStatus.COMPLETED,"voting is still ACTIVE");
+    require(_election[electionId].status==ElectionStatus.COMPLETED,"Voting is still ACTIVE");
     _to.transfer(_election[electionId].comission);
+    _election[electionId].comission = 0;
   }
 
   //Завершить голосование
   function finishElection(uint256 electionId) public {
-    require(_election[electionId].status == ElectionStatus.ACTIVE,"Proposal is already completed.");
+    require(_election[electionId].status == ElectionStatus.ACTIVE,"Voting is still underway.");
     require(_election[electionId].endTimeOfElecting <= block.timestamp,"Voting is active.");
     _election[electionId].status = ElectionStatus.COMPLETED;
 
-    address payable winCandidate;
-    uint256 maxVotes;
+    
+    
     for (uint256 i = 0; i < _election[electionId].numberOfCandidate; i++) {
       if(_candidate[electionId][i].numberVotes > maxVotes){
         maxVotes == _candidate[electionId][i].numberVotes;
-        winCandidate == _candidate[electionId][i].adrCandidate;
+        winCandidate == _candidate[electionId][i].candidateAddress;
       }
     }
 
@@ -158,6 +161,7 @@ contract Voting {
     _election[electionId].deposit -= _election[electionId].comission;
 
     winCandidate.transfer(_election[electionId].deposit);
+
     _election[electionId].deposit = 0;
 
     _election[electionId].status = ElectionStatus.COMPLETED;
