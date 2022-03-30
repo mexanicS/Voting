@@ -1,12 +1,11 @@
 const hre = require("hardhat");
 
-
 async function main() {
   const [deployer] = await ethers.getSigners(); 
 
   console.log("Deploying contracts with the account:", deployer.address); 
 
-  const Voting = await hre.ethers.getContractFactory('Donations');
+  const Voting = await hre.ethers.getContractFactory('Voting');
   const voting = await Voting.deploy(); //deploying the contract
 
   await voting.deployed(); // waiting for the contract to be deployed
