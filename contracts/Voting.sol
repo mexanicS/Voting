@@ -4,11 +4,11 @@ pragma solidity >=0.4.22 <0.9.0;
 contract Voting {
   address owner;
   address payable winCandidate;
-  //string[] public curentAdrCandidate;
 
   uint256 private _currentElectionId;
   uint256 public totalTime = 3 days;
   uint256 public endTime;
+  uint256 currentBeforeNumberCandidate;
   uint256 maxVotes;
   
   constructor()  {
@@ -42,7 +42,6 @@ contract Voting {
   struct Vote {
     bool isVoted;
     address candidateAddress;
-    string nameCandidate;
   }
   struct Election {
     string description;
@@ -62,16 +61,6 @@ contract Voting {
     election.endTimeOfElecting = block.timestamp + totalTime;
     election.status = ElectionStatus.ACTIVE;
 
-    /*_election[electionId] = Election({
-      description: description,
-      endTimeOfElecting: block.timestamp + totalTime,
-      status: ElectionStatus.ACTIVE,
-      numberOfVotes: 0,
-      numberOfCandidate: 0,
-      listCandidate:,
-      deposit: 0,
-      comission: 0
-    });*/
     emit NewElection(electionId);
     return electionId;
   }
@@ -81,6 +70,11 @@ contract Voting {
     require(_election[electionId].status==ElectionStatus.ACTIVE,"Voting is not ACTIVE");
     require(_election[electionId].endTimeOfElecting >= block.timestamp,"Start voting first.");
     
+    for (uint256 i = 0; i < _election[electionId].numberOfCandidate; i++) {
+      if(_adrCandidate == _candidate[electionId][i].candidateAddress){
+        revert("The address already exists");
+      }
+    }
     _candidate[electionId][_election[electionId].numberOfCandidate].name = _name;
     _candidate[electionId][_election[electionId].numberOfCandidate].candidateAddress = _adrCandidate;
 
@@ -99,7 +93,6 @@ contract Voting {
 
     _votes[electionId][msg.sender].isVoted = true;
     _votes[electionId][msg.sender].candidateAddress = _candidate[electionId][candidate].candidateAddress;
-    _votes[electionId][msg.sender].nameCandidate = _candidate[electionId][candidate].name;
 
     _candidate[electionId][candidate].numberVotes++;
 
