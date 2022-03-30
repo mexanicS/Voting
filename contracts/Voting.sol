@@ -65,7 +65,7 @@ contract Voting {
     return electionId;
   }
 
-  //TO DO: Невозможность добавить один и тот же адрес
+ 
   function addCandidate(uint electionId,string memory _name, address payable _adrCandidate) public {
     require(_election[electionId].status==ElectionStatus.ACTIVE,"Voting is not ACTIVE");
     require(_election[electionId].endTimeOfElecting >= block.timestamp,"Start voting first.");
