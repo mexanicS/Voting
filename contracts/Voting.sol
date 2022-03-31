@@ -2,14 +2,13 @@
 pragma solidity >=0.4.22 <0.9.0;
 
 contract Voting {
-  address owner;
+  address public owner;
   address payable winCandidate;
 
   uint256 private _currentElectionId;
   uint256 public totalTime = 3 days;
   uint256 public endTime;
-  uint256 currentBeforeNumberCandidate;
-  uint256 maxVotes;
+  uint256 public maxVotes;
   
   constructor()  {
     owner = msg.sender;
@@ -18,6 +17,8 @@ contract Voting {
   mapping(uint256 => mapping(address => Vote)) private _votes;
   mapping(uint256 => mapping(uint256 => Candidate)) public _candidate;
   mapping(uint256 => Election) public _election;
+
+  
 
   modifier requireOwner() {
     require(owner == msg.sender, "No access");
@@ -41,7 +42,7 @@ contract Voting {
   }
   struct Vote {
     bool isVoted;
-    address candidateAddress;
+    address voteAddress;
   }
   struct Election {
     string description;
@@ -49,7 +50,7 @@ contract Voting {
     ElectionStatus status;
     uint256 numberOfVotes;
     uint256 numberOfCandidate;
-    string[] listCandidate;
+    string[] listCandidate; 
     uint256 deposit;
     uint256 comission;
   }
@@ -92,7 +93,7 @@ contract Voting {
     _election[electionId].numberOfVotes++;
 
     _votes[electionId][msg.sender].isVoted = true;
-    _votes[electionId][msg.sender].candidateAddress = _candidate[electionId][candidate].candidateAddress;
+    _votes[electionId][msg.sender].voteAddress = msg.sender;
 
     _candidate[electionId][candidate].numberVotes++;
 
