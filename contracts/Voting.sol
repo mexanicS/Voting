@@ -87,7 +87,7 @@ contract Voting {
     Election storage election = _election[electionId];
     require(election.endTimeOfElecting >= block.timestamp,"The voting is over");
     require(!_votes[electionId][msg.sender].isVoted,"Have you already voted");
-    require(msg.value >= .01 ether);
+    require(msg.value >= .01 ether,"Insufficient funds for voting" );
 
     _election[electionId].deposit += msg.value;
     _election[electionId].numberOfVotes++;
@@ -128,7 +128,7 @@ contract Voting {
   function infElaction(uint8 electionId) external view returns (Election memory election){
     return _election[electionId];
   }
-
+ 
   //Вывести комиссию
   function withdrawComission(uint electionId, address payable _to) public requireOwner{
     require(_election[electionId].status==ElectionStatus.COMPLETED,"Voting is still ACTIVE");

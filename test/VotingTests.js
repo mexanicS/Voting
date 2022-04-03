@@ -1,5 +1,6 @@
 const { expect  } = require("chai");
 const { ethers } = require("hardhat");
+const {solidity} = require("ethereum-waffle");
 
 describe("Voting", function () {
   let voting
@@ -32,12 +33,12 @@ describe("Voting", function () {
       it("createElection correctly", async function(){
         
         const tx = await voting.createElection(
-          "The best contract"
+          "testVoting"
         )
 
         const cElection = await voting._election(0)
         //console.log(cElection)
-        expect(cElection.description).to.eq("The best contract")
+        expect(cElection.description).to.eq("testVoting")
         //console.log(tx)
       
         const ts =  await getTimeStamp(tx.blockNumber)
@@ -52,6 +53,10 @@ describe("Voting", function () {
         expect(cElection.numberOfCandidate.toString()).to.eq(zero.toString())
         expect(cElection.deposit.toString()).to.eq(zero.toString())
         expect(cElection.comission.toString()).to.eq(zero.toString())
+
+        /*await expect(tx)
+          .to.emit(voting, "NewElection")
+          .withArgs(0);*/
       })
     })
 
@@ -62,21 +67,52 @@ describe("Voting", function () {
     describe("addCandidate",function(){
       it("addCandodate correctly", async function(){
         await voting.createElection(
-          "The best contract"
+          "testVoting"
         )
-        const cElection = await voting._election(0)
         this.timeout(5000)  
         await delay(1000)
       
-        const txAddCandidate = await voting.addCandidate (0,"Stepan Sergeeich",owner.address)
-        
-        console.log(cElection.numberOfCandidate)
+        await voting
+          .addCandidate(0,"Piligrim Ivanivich",acc1.address)
+        await voting
+          .addCandidate(0,"Mentos Petrivich",acc2.address)
+
+        cElection = await voting._election(0)
+        expect(cElection.numberOfCandidate.toString()).to.eq("2")
+
+        cCandidate = await voting._candidate(0,0)
+        expect(cCandidate.name).to.eq("Piligrim Ivanivich")
+        expect(cCandidate.candidateAddress).to.eq(acc1.address)
+
+        cCandidate = await voting._candidate(0,1)
+        expect(cCandidate.name).to.eq("Mentos Petrivich")
+        expect(cCandidate.candidateAddress).to.eq(acc2.address)
+
+        //TO DO: Check all require
+
       })
     })
 
-    describe("Vote",function(){
+    describe("vote",function(){
       it("It is possible to vote", async function(){
+        await voting.createElection("testVoting")
+        await voting
+          .addCandidate(0,"Stepan Sergeeich",owner.address)
 
+        //console.log(cCandidate)
+        voteTx = await voting.connect(acc2).vote(0,0, {value: ethers.utils.parseEther("0.02")})
+        cCandidate = await voting._candidate(0,0)
+        //console.log(cCandidate)
+
+        expect(cCandidate.numberVotes.toString()).to.eq("1")
+        
+        //cCandidate = await voting._candidate(0,0)
+        cElection = await voting._election(0)
+
+        expect(cElection.deposit.toString()).to.eq("20000000000000000")
+
+
+        //TO DO: Check all param and require
       })
     })
 })
