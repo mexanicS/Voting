@@ -6,7 +6,7 @@ contract Voting {
   address payable winCandidate;
 
   uint256 private _currentElectionId;
-  uint256 public totalTime = 10 seconds;
+  uint256 public totalTime = 3 days;
   uint256 public endTime;
   uint256 public maxVotes;
   
@@ -39,7 +39,6 @@ contract Voting {
     string name;
     address payable candidateAddress;
     uint numberVotes;
-    bool asd;
   }
   struct Vote {
     address voteAddress;
@@ -110,8 +109,8 @@ contract Voting {
   }
 
   //До конца голосования
-  function timeLeft (uint elactionID) public returns(uint256){
-    endTime = _election[elactionID].endTimeOfElecting - block.timestamp;
+  function timeLeft (uint elactionId) public returns(uint256){
+    endTime = _election[elactionId].endTimeOfElecting - block.timestamp;
     return endTime;
   }
   
@@ -126,7 +125,7 @@ contract Voting {
   }
 
   //Инфо про одно из голосований
-  function infElaction(uint8 electionId) external view returns (Election memory election){
+  function infElection(uint8 electionId) external view returns (Election memory election){
     return _election[electionId];
   }
  
@@ -141,7 +140,7 @@ contract Voting {
   function finishElection(uint256 electionId) public {
     require(_election[electionId].status == ElectionStatus.ACTIVE,"Voting is still underway.");
     require(_election[electionId].endTimeOfElecting <= block.timestamp,"Voting is active.");
-    _election[electionId].status = ElectionStatus.COMPLETED;
+    
 
     for (uint256 i = 0; i < _election[electionId].numberOfCandidate; i++) {
       if(_candidate[electionId][i].numberVotes > maxVotes){
