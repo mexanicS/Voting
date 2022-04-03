@@ -6,7 +6,7 @@ contract Voting {
   address payable winCandidate;
 
   uint256 private _currentElectionId;
-  uint256 public totalTime = 3 days;
+  uint256 public totalTime = 10 seconds;
   uint256 public endTime;
   uint256 public maxVotes;
   
@@ -14,7 +14,7 @@ contract Voting {
     owner = msg.sender;
   }
 
-  mapping(uint256 => mapping(address => Vote)) private _votes;
+  mapping(uint256 => mapping(address => Vote)) public _votes;
   mapping(uint256 => mapping(uint256 => Candidate)) public _candidate;
   mapping(uint256 => Election) public _election;
 
@@ -39,10 +39,11 @@ contract Voting {
     string name;
     address payable candidateAddress;
     uint numberVotes;
+    bool asd;
   }
   struct Vote {
-    bool isVoted;
     address voteAddress;
+    bool isVoted;
   }
   struct Election {
     string description;
